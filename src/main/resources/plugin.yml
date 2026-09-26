@@ -1,0 +1,16 @@
+name: NexusGiants
+version: 0.5.0
+main: com.nexusuniverse.giants.NexusGiantsPlugin
+api-version: '1.21'
+author: Nexus Universe
+description: Scales mobs (hostile AND passive alike) using the modern Scale attribute -- real hitbox resizing, not a visual trick -- every mob gets a rolled AGE (1-100 by default) that drives its size, with a floating name tag showing its species and age, plus proportional health/damage/knockback-resistance boosts, size-scaled loot/XP, full per-mob-type config, and a throwable Miniature Crystal that shrinks and permanently tames any mob into a standing miniature army.
+
+commands:
+  nexusgiants:
+    description: Reload config, spawn a test mob at a given age or exact scale, manage the spawn lock, or manage Miniature Crystals.
+    usage: /nexusgiants <reload|spawn <entitytype> [age]|spawnscale <entitytype> <scale>|spawnlock <on|off|status>|minigive <player> [amount]|minirelease|minilist [player]>
+
+permissions:
+  nexusgiants.admin:
+    description: Reload config, spawn test mobs, and manage Miniature Crystals.
+    default: op

@@ -1,0 +1,207 @@
+# NexusGiants configuration
+
+# The scale a mob reaches at its OLDEST (age-scaling.max-age below, 100 by
+# default) -- applied to every mob that spawns, unless it's in "excluded"
+# below or has its own entry under "overrides". 1.0 = normal vanilla size.
+# Also used as the exact scale for /nexusgiants spawn when age-scaling is
+# disabled entirely.
+default-scale: 6.0
+
+# per-entity-type overrides for that same "scale at the oldest age" -- entity
+# type name (lowercase), any value here replaces default-scale for that type.
+# Add/remove/reprice freely.
+#
+# Passive/neutral mobs get exactly the same age-1-to-100 sizing as hostile
+# ones -- there's no separate "passive mode" in the code, it's the same
+# onSpawn handler for every natural spawn regardless of mob type. These are
+# just sensible default CEILINGS for them so an age-100 chicken doesn't end
+# up as large as an age-100 zombie by accident (they'd otherwise all fall
+# back to default-scale, 6.0, which reads as way too big for a farm animal).
+overrides:
+  zombie: 10.0
+  husk: 10.0
+  drowned: 10.0
+  skeleton: 8.0
+  stray: 8.0
+  spider: 12.0
+  cave_spider: 7.0
+  creeper: 4.0
+  enderman: 7.0
+  cow: 3.0
+  sheep: 2.5
+  pig: 2.8
+  chicken: 2.0
+  rabbit: 1.8
+  horse: 3.5
+  wolf: 3.0
+  villager: 2.2
+
+# Every NATURALLY spawned, non-excluded mob is given a random AGE, and its
+# size is derived from that age -- the older, the bigger. This replaces the
+# old flat "giant-chance" (a rare all-or-nothing roll to become one fixed
+# giant size) with a full spread: a freshly-spawned mob could be a
+# fist-sized age-1 hatchling, a towering age-100 elder, or anywhere in
+# between, and every scaled mob gets a floating name tag showing its
+# species and exact age so you can tell at a glance. Only affects natural
+# spawns -- spawner/egg/breeding/command-summoned mobs are untouched
+# either way, same as size control has always worked in this plugin.
+age-scaling:
+  enabled: true
+  # the age range every natural spawn rolls into, inclusive on both ends.
+  min-age: 1
+  max-age: 100
+  # the scale used at min-age (the smallest a mob can ever be) -- flat
+  # across every mob type on purpose: a freshly-hatched zombie and a
+  # freshly-hatched spider should both read as "tiny newborn", not a
+  # fraction of their own adult max. The scale at max-age comes from
+  # default-scale/overrides above instead, per type.
+  min-scale: 0.3
+
+# Controls how often a NATURAL mob spawn is allowed to happen at all -- a
+# per-attempt chance, not vanilla's blunt on/off doMobSpawning gamerule
+# (which spawn-lock below keeps forced on regardless, in every dimension,
+# since this chance is meant to be the real rarity control). Only affects
+# whether a natural spawn happens at all, not its age/size once it does.
+#
+# Each dimension gets its OWN independent spawn-chance -- nether fortresses
+# and bastions attempt spawns far more often than the Overworld does, so
+# the same survival-per-attempt rate can still produce an overwhelming
+# absolute number of mobs there. The Nether's default below starts much
+# lower than the Overworld's for exactly that reason -- tune independently
+# to taste.
+worlds:
+  overworld:
+    spawn-control:
+      enabled: true
+      spawn-chance: 0.35
+  nether:
+    spawn-control:
+      enabled: true
+      # starts much lower than the Overworld -- fortress/bastion spawn
+      # attempts happen far more often, so the same ratio as the
+      # Overworld can still feel like an infestation here
+      spawn-chance: 0.08
+  end:
+    spawn-control:
+      enabled: true
+      spawn-chance: 0.35
+
+# Continuously re-asserts doMobSpawning=true on every world regardless of
+# dimension (Overworld, Nether, and End alike), and cancels
+# "/gamerule doMobSpawning <value>" commands from players and console
+# before they run, so nobody can bypass this plugin's own per-dimension
+# spawn-chance control above by just turning vanilla spawning off
+# entirely. The only sanctioned way to turn this off is
+# /nexusgiants spawnlock off, which flips this value and saves it
+# immediately (a live toggle, not a config-edit-and-restart setting).
+# NOTE: command blocks can't be intercepted before they run this way --
+# no Bukkit/Paper event exists for that, for any plugin. A command block
+# trying to disable spawning still gets corrected within about a tick by
+# the periodic re-assertion, just not prevented outright the way a player
+# or console command is.
+spawn-lock:
+  enabled: true
+
+# mobs that should NEVER be resized (or aged/tagged) -- already boss-scale,
+# or scaling them would break something mechanically
+excluded:
+  - ENDER_DRAGON
+  - WITHER
+  - WARDEN
+  - GIANT
+  - GHAST
+  - IRON_GOLEM
+
+# how much size translates into stats. Formula for each:
+#   newValue = baseValue * (1 + (scale - 1) * multiplier)
+# 1.0 = stat scales exactly with size. Lower = stat grows slower than size.
+health-scale-multiplier: 1.0
+damage-scale-multiplier: 0.6
+
+# flat knockback resistance ADDED per (scale - 1), capped at 1.0 (fully immune)
+knockback-resistance-per-scale: 0.15
+
+# straight multiplier on movement speed for every scaled mob -- bigger mobs
+# are a little slower and lumbering by default. 1.0 = no change.
+movement-speed-multiplier: 0.85
+
+# bigger mobs drop more, on death
+loot-scale-enabled: true
+loot-scale-multiplier: 1.0
+xp-scale-multiplier: 1.0
+
+robots:
+  # gives the listed mob types a robotic look: real mob hidden, replaced
+  # visually with an iron-armored, Observer-headed ArmorStand in a rigid
+  # pose that follows it exactly, sized to match that mob's own rolled
+  # age/scale. See RobotSkinManager for why this is the real substitute
+  # for a resource pack, not a full custom skin.
+  enabled: true
+  name-prefix: "§7§l[UNIT] "
+  types:
+    - ZOMBIE
+    - HUSK
+    - SKELETON
+
+riding:
+  # right-click a scaled-up mob to mount it -- a passenger ride, not steered:
+  # the mob's own AI still drives where it goes, same as being a passenger on
+  # any vanilla mount that isn't a horse/pig/strider
+  enabled: true
+  # only mobs scaled to at least this much are rideable
+  minimum-scale-to-ride: 2.0
+
+# Miniature Crystal: throw it at any mob (hostile, passive, or boss-tier
+# alike -- nothing is excluded here by default, on purpose) to shrink it to
+# age-scaling.min-scale (this plugin's own "as small as anything ever gets"
+# floor) and tame it PERMANENTLY to whoever threw it. Unlike a normal aged
+# spawn, a tamed miniature never grows or shrinks again on its own -- the
+# whole point is a standing "miniature army" of pocket-sized pets that stay
+# pocket-sized forever. It follows its owner around (see follow-owner below)
+# and will never target or attack them, but is otherwise a completely
+# ordinary mob of its type -- a mini zombie still burns in daylight, a mini
+# creeper still explodes if provoked by someone else, and so on.
+miniature:
+  item:
+    material: AMETHYST_SHARD
+    display-name: "&dMiniature Crystal"
+    lore:
+      - "&7Throw this at ANY mob -- hostile,"
+      - "&7passive, even boss-tier."
+      - "&7It shrinks to the smallest size"
+      - "&7this plugin ever makes anything,"
+      - "&7and is tamed to you FOREVER."
+  mechanics:
+    # how close a mob has to wander to a landed crystal to be claimed
+    pickup-radius: 1.5
+    # how often (ticks, 20 = 1 second) landed crystals are checked for a nearby mob
+    scan-interval-ticks: 10
+    # a landed crystal nobody's mob claims within this many seconds disappears
+    unclaimed-despawn-seconds: 300
+    # entity types (Bukkit EntityType names) this item will never shrink+tame.
+    # Empty by default -- deliberately different from "excluded" above, which
+    # is only about natural-spawn sizing and doesn't apply to this item at all.
+    excluded-entity-types: []
+  # keeps every tamed miniature near its owner: a real vanilla-style walk via
+  # the mob's own pathfinding when it's just lagging behind, or a straight
+  # teleport when it's fallen further behind than that (or its owner changed
+  # worlds entirely).
+  follow-owner:
+    enabled: true
+    check-interval-ticks: 20
+    # walk normally (using the mob's own AI) once further than this from the owner
+    walk-distance: 3.0
+    # teleport straight to the owner once further than this (or in a different world)
+    teleport-distance: 12.0
+    # vanilla speed multiplier for the follow-walk; 1.0 = that mob's normal walk speed
+    speed: 1.0
+  recipe:
+    enabled: true
+    # Shapeless -- drop these four items into a crafting grid in any arrangement.
+    ingredients:
+      - AMETHYST_SHARD
+      - SLIME_BALL
+      - GOLD_NUGGET
+      - ECHO_SHARD
+  messages:
+    tamed: "&dYour Miniature Crystal shrank and tamed &f{mob}&d -- it'll stay this size and follow you forever."
