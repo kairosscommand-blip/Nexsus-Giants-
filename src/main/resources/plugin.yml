@@ -1,0 +1,16 @@
+name: NexusGiants
+version: 0.4.0
+main: com.nexusuniverse.giants.NexusGiantsPlugin
+api-version: '1.21'
+author: Nexus Universe
+description: Scales mobs using the modern Scale attribute -- real hitbox resizing, not a visual trick -- every mob gets a rolled AGE (1-100 by default) that drives its size, with a floating name tag showing its species and age, plus proportional health/damage/knockback-resistance boosts, size-scaled loot/XP, and full per-mob-type config.
+
+commands:
+  nexusgiants:
+    description: Reload config, spawn a test mob at a given age or exact scale, or manage the spawn lock.
+    usage: /nexusgiants <reload|spawn <entitytype> [age]|spawnscale <entitytype> <scale>|spawnlock <on|off|status>>
+
+permissions:
+  nexusgiants.admin:
+    description: Reload config and spawn test mobs.
+    default: op
